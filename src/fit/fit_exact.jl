@@ -2,7 +2,7 @@ function _get_z_e_obs_threaded(
     gate, model, X, Y, exposure, re_μ_list, re_Σ_list, map_matrix, n_sims
 )
     z_e_obs_mat = fill(0.0, size(X)[1], size(model)[2], nthreads())
-    @threads for _ in 1:n_sims
+    for _ in 1:n_sims
         gate_em_eval = LogitGatingSim(
             gate,
             X;
@@ -31,7 +31,7 @@ function fit_exact_VI(Y, X, α_init, model;
         # Initial loglik
         gate_init = LogitGating(α_init, β_init)
         ll_init_np_vec = fill(0.0, n_sims)
-        @threads for sim in 1:n_sims
+        for sim in 1:n_sims
             gate_init_eval = LogitGatingSim(
                 gate_init,
                 X;
@@ -67,21 +67,19 @@ function fit_exact_VI(Y, X, α_init, model;
         re_μ_em = deepcopy(re_μ_list)
         re_Σ_em = deepcopy(re_Σ_list)
         model_em = copy(model)
-        # model_em_expo = exposurize_model(model_em, exposure = exposure)
         ll_em_np = ll_init_np
         ll_em = ll_init
         ll_em_old = -Inf
         iter = 0
 
         ll_em_return = [ll_em]
-        while iter < ecm_iter_max # (ll_em - ll_em_old > ϵ) & (iter < ecm_iter_max)
+        while iter < ecm_iter_max
             # Update counter and loglikelihood
             iter = iter + 1
             ll_em_np_old = ll_em_np
             ll_em_old = ll_em
 
             # E-Step
-            # z_e_obs = mean(z_e_obs_mat, dims=3)[:,:,1]
             gate_em = LogitGating(α_em, β_em)
             z_e_obs = _get_z_e_obs_threaded(
                 gate_em, model_em, X, Y, exposure, re_μ_em, re_Σ_em, map_matrix, n_sims
@@ -98,7 +96,7 @@ function fit_exact_VI(Y, X, α_init, model;
                 penalty=penalty, pen_α=pen_α)
             gate_em = LogitGating(α_em, β_em)
             ll_em_np_vec = fill(0.0, n_sims)
-            @threads for sim in 1:n_sims
+            for sim in 1:n_sims
                 gate_em_eval = LogitGatingSim(
                     gate_em,
                     X;
@@ -134,14 +132,11 @@ function fit_exact_VI(Y, X, α_init, model;
 
             # M-Step: component distributions
             for j in 1:size(model)[1] # by dimension
-                # for j in 1:1
                 for k in 1:size(model)[2] # by component
                     params_old = params(model_em[j, k])
 
                     model_em[j, k] = EM_M_expert_exact(model_em[j, k],
                         Y[:, j], exposure,
-                        # ll_em_list.expert_ll_pos_dim_comp[j][:,k],
-                        # ll_em_list.expert_ll_dim_comp[j, k, :],
                         vec(z_e_obs[:, k]);
                         penalty=penalty, pen_pararms_jk=pen_params[j][k])
 
@@ -157,7 +152,7 @@ function fit_exact_VI(Y, X, α_init, model;
             gate_em = LogitGating(α_em, β_em)
             # model_em_expo = exposurize_model(model_em, exposure = exposure)
             ll_em_np_vec = fill(0.0, n_sims)
-            @threads for sim in 1:n_sims
+            for sim in 1:n_sims
                 gate_em_eval = LogitGatingSim(
                     gate_em,
                     X;
@@ -191,7 +186,7 @@ function fit_exact_VI(Y, X, α_init, model;
             -2.0 * ll_em_np +
             log(size(Y)[1]) * (_count_α(gate_em.α) + _count_params(model_em))
 
-        return (α_fit=gate_em.α, β_fit=gate_em.β, model_fit=model_em, # re_fit = re_list_em,
+        return (α_fit=gate_em.α, β_fit=gate_em.β, model_fit=model_em,
             re_μ_fit=re_μ_em, re_Σ_fit=re_Σ_em,
             ll_history=ll_em_return,
             converge=converge, iter=iter,
