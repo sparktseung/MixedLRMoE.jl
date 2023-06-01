@@ -1,8 +1,8 @@
 function _get_z_e_obs_threaded(
     gate, model, X, Y, exposure, re_μ_list, re_Σ_list, map_matrix, n_sims
 )
-    z_e_obs_mat = fill(0.0, size(X)[1], size(model)[2], nthreads())
-    for _ in 1:n_sims
+    z_e_obs_mat = fill(0.0, size(X)[1], size(model)[2], n_sims)
+    for sim in 1:n_sims
         gate_em_eval = LogitGatingSim(
             gate,
             X;
@@ -12,7 +12,7 @@ function _get_z_e_obs_threaded(
             check_args=false,
         )
         ll_em_list = loglik_exact(Y, gate_em_eval, model; exposure=exposure)
-        z_e_obs_mat[:, :, threadid()] .=
+        z_e_obs_mat[:, :, sim] .=
             exp.(ll_em_list.gate_expert_ll_comp .- ll_em_list.gate_expert_ll)
     end
     z_e_obs = sum(z_e_obs_mat; dims=3)[:, :, 1] ./ n_sims
