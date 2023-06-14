@@ -206,7 +206,7 @@ function EM_M_αβw_VI(X, α, β, z_e_obs, z_e_lat, k_e;
     map_matrix=nothing, re_μ_list=nothing, re_Σ_list=nothing, n_sims=10,
     αβ_iter_max=5, w_iter_max=5,
     penalty=true, pen_α=5)
-    let comp_zkz, comp_zkz_marg, α_new, α_old, β_new, β_old, iter, gate_new, w # , re_new, re_old
+    let comp_zkz, comp_zkz_marg, α_new, α_old, β_new, β_old, iter, gate_new, w
         comp_zkz = z_e_obs .+ (k_e .* z_e_lat)
         comp_zkz_marg = vec(sum(comp_zkz; dims=2))
 
@@ -273,6 +273,9 @@ function EM_M_αβw_VI(X, α, β, z_e_obs, z_e_lat, k_e;
                         j,
                         comp_zkz_marg,
                     )
+
+                    println("dβj: ", dβj)
+                    println("dβjdβj: ", dβjdβj)
 
                     β_new[j, :] = β_new[j, :] .- inv(dβjdβj) * dβj
 
