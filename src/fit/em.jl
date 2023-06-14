@@ -57,11 +57,11 @@ function _dQdα_all_samples(
     n_sims = length(re_list_sample_list)
     αj_len = length(α[j, :])
 
-    dαj_mat = zeros(Float64, αj_len, nthreads())
-    dαjdαj_mat = zeros(Float64, αj_len, αj_len, nthreads())
+    dαj_mat = zeros(Float64, αj_len, n_sims)
+    dαjdαj_mat = zeros(Float64, αj_len, αj_len, n_sims)
 
     @threads for sample_no in 1:n_sims
-        dαj_mat[:, threadid()], dαjdαj_mat[:, :, threadid()] = _dQdα_threaded(
+        dαj_mat[:, sample_no], dαjdαj_mat[:, :, sample_no] = _dQdα_threaded(
             re_list_sample_list[sample_no],
             map_matrix,
             X,
@@ -100,11 +100,11 @@ function _dQdβ_all_samples(
     n_sims = length(re_list_sample_list)
     βj_len = length(β[j, :])
 
-    dβj_mat = zeros(Float64, βj_len, nthreads())
-    dβjdβj_mat = zeros(Float64, βj_len, βj_len, nthreads())
+    dβj_mat = zeros(Float64, βj_len, n_sims)
+    dβjdβj_mat = zeros(Float64, βj_len, βj_len, n_sims)
 
     @threads for sample_no in 1:n_sims
-        dβj_mat[:, threadid()], dβjdβj_mat[:, :, threadid()] = _dQdβ_threaded(
+        dβj_mat[:, sample_no], dβjdβj_mat[:, :, sample_no] = _dQdβ_threaded(
             re_list_sample_list[sample_no], map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg
         )
     end
@@ -169,16 +169,16 @@ function _dQdμldΣl_all_samples(
     n_sims = length(re_list_sample_list)
     μl_len = length(re_μ_list[l])
 
-    dμl_mat = zeros(Float64, μl_len, nthreads())
-    dμldμl_mat = zeros(Float64, μl_len, nthreads())
-    dsqrtΣl_mat = zeros(Float64, μl_len, nthreads())
-    dsqrtΣldsqrtΣl_mat = zeros(Float64, μl_len, nthreads())
+    dμl_mat = zeros(Float64, μl_len, n_sims)
+    dμldμl_mat = zeros(Float64, μl_len, n_sims)
+    dsqrtΣl_mat = zeros(Float64, μl_len, n_sims)
+    dsqrtΣldsqrtΣl_mat = zeros(Float64, μl_len, n_sims)
 
     @threads for sample_no in 1:n_sims
-        (dμl_mat[:, threadid()],
-        dμldμl_mat[:, threadid()],
-        dsqrtΣl_mat[:, threadid()],
-        dsqrtΣldsqrtΣl_mat[:, threadid()]) = _dQdμldΣl_thread(
+        (dμl_mat[:, sample_no],
+        dμldμl_mat[:, sample_no],
+        dsqrtΣl_mat[:, sample_no],
+        dsqrtΣldsqrtΣl_mat[:, sample_no]) = _dQdμldΣl_thread(
             re_list_sample_list[sample_no],
             map_matrix,
             X,
@@ -273,9 +273,6 @@ function EM_M_αβw_VI(X, α, β, z_e_obs, z_e_lat, k_e;
                         j,
                         comp_zkz_marg,
                     )
-
-                    println("dβj: ", dβj)
-                    println("dβjdβj: ", dβjdβj)
 
                     β_new[j, :] = β_new[j, :] .- inv(dβjdβj) * dβj
 
