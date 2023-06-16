@@ -24,7 +24,7 @@ function fit_exact_VI(Y, X, α_init, model;
     β_init=nothing, map_matrix=nothing, re_μ_list=nothing, re_Σ_list=nothing, n_sims=10,
     penalty=true, pen_α=5.0, pen_params=nothing,
     ϵ=1e-03, α_iter_max=5.0, ecm_iter_max=200,
-    print_steps=true)
+    print_steps=1)
     # Make variables accessible within the scope of `let`
     let α_em, β_em, gate_em, model_em, model_em_expo, ll_em_list, ll_em, ll_em_np,
         ll_em_old, ll_em_np_old, iter, z_e_obs, z_e_lat, k_e, params_old, re_μ_em, re_Σ_em
@@ -56,7 +56,7 @@ function fit_exact_VI(Y, X, α_init, model;
         end
         ll_init = ll_init_np + ll_penalty + ll_re
 
-        if print_steps
+        if print_steps > 0
             @info("Initial loglik: $(ll_init_np) (no penalty), $(ll_init) (with penalty)")
         end
 
@@ -123,7 +123,7 @@ function fit_exact_VI(Y, X, α_init, model;
 
             s = ll_em - ll_em_temp > 0 ? "+" : "-"
             pct = abs((ll_em - ll_em_temp) / ll_em_temp) * 100
-            if print_steps
+            if (print_steps > 0) && (iter % print_steps == 0)
                 @info(
                     "Iteration $(iter), updating α: $(ll_em_old) ->  $(ll_em), ( $(s) $(pct) % )"
                 )
@@ -140,7 +140,7 @@ function fit_exact_VI(Y, X, α_init, model;
                         vec(z_e_obs[:, k]);
                         penalty=penalty, pen_pararms_jk=pen_params[j][k])
 
-                    if print_steps
+                    if (print_steps > 0) && (iter % print_steps == 0)
                         @info(
                             "Iteration $(iter), updating model[$j, $k]. Parameters:  $(params_old) ->  $(params(model_em[j,k]))"
                         )
@@ -181,10 +181,13 @@ function fit_exact_VI(Y, X, α_init, model;
         end
 
         converge = (ll_em - ll_em_old > ϵ) ? false : true
-        AIC = -2.0 * ll_em_np + 2 * (_count_α(gate_em.α) + _count_params(model_em))
+        AIC =
+            -2.0 * ll_em_np +
+            2 * (_count_α(gate_em.α) + _count_β(gate_em.β) + _count_params(model_em))
         BIC =
             -2.0 * ll_em_np +
-            log(size(Y)[1]) * (_count_α(gate_em.α) + _count_params(model_em))
+            log(size(Y)[1]) *
+            (_count_α(gate_em.α) + _count_β(gate_em.β)_count_params(model_em))
 
         return (α_fit=gate_em.α, β_fit=gate_em.β, model_fit=model_em,
             re_μ_fit=re_μ_em, re_Σ_fit=re_Σ_em,
