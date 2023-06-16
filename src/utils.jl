@@ -5,3 +5,7 @@ function mapRE(re_list, map_matrix)
     end
     return result
 end
+
+function _count_β(β)
+    return size(β, 1) <= 2 ? 0 : size(β, 1) - 2
+end
