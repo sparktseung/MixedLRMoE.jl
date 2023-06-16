@@ -1,4 +1,4 @@
-using Documenter, MixedLRMoE
+using Documenter # , MixedLRMoE
 
 makedocs(
 	doctest = false,
