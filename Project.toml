@@ -1,7 +1,7 @@
 name = "MixedLRMoE"
 uuid = "5cfe8048-c24a-4519-9529-e8ccde501b98"
 authors = ["sparktseung <hi@sparktseung.com> and contributors"]
-version = "1.0.0-DEV"
+version = "1.0.0"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
