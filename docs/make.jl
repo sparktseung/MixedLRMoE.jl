@@ -6,7 +6,8 @@ makedocs(
 	sitename = "MixedLRMoE.jl",
 	pages = [
 		"Overview" => "index.md",
-		# "Modelling Framework" => "framework.md",
+        "Modelling Framework" => "framework.md",
+        "Random Effects" => "random_effects.md",
 		# "Expert Functions" => "experts.md",
 		# "Model Initialization" => "init.md",
 		# "Fitting Function" => "fit.md",
