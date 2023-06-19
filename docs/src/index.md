@@ -16,4 +16,5 @@ the unobserved heterogeneity of the drivers' risk profiles.
 
 **MixedLRMoE** mainly provides a fitting function to obtain the model parameters and **approximated** posterior distributions of the random effects,
 which is documented in this website. The **MixedLRMoE** package depends on **LRMoE** for the implementation of various expert functions and other
-internal utilities. For the set of supported expert functions, please refer to the [LRMoE documentation](https://actsci.utstat.utoronto.ca/LRMoE.jl/stable/experts).
+internal and external utilities. For the overlapping functionalities (e.g. supported expert functions, model initialization, penalization of expert functions, predictions, etc.),
+please refer to the [LRMoE documentation](https://actsci.utstat.utoronto.ca/LRMoE.jl/stable/).
