@@ -234,6 +234,6 @@ function fit_exact_VI(Y, X, α_init, model,
             # converge=converge,
             iter=iter,
             ll_np=ll_em_np, ll=ll_em) # ,
-            # AIC=AIC, BIC=BIC)
+        # AIC=AIC, BIC=BIC)
     end
 end
