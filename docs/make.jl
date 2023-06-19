@@ -9,7 +9,7 @@ makedocs(
         "Modelling Framework" => "framework.md",
         "Random Effects" => "random_effects.md",
 		# "Expert Functions" => "experts.md",
-		# "Model Initialization" => "init.md",
+		"Gating Function" => "gating.md",
 		"Fitting Function" => "fit.md",
 		# "Predictive Functions" => "predictive.md",
 		# "Examples & Tutorials" => Any[

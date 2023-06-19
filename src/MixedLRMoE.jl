@@ -23,6 +23,10 @@ import LRMoE:
     _count_params
 
 export
+    LogitGating,
+    LogitGatingSim,
+    LogitGatingEval,
+    DiagMvNormal_KL,
     fit_exact_VI
 
 ### source files
