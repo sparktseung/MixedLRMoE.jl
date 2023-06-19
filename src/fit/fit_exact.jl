@@ -19,6 +19,48 @@ function _get_z_e_obs_threaded(
     return z_e_obs
 end
 
+"""
+    fit_exact_VI(Y, X, α_init, model; ...)
+
+Fit a Mixed LRMoE model with exact observations of Y using a variational algorithm.
+
+# Arguments
+- `Y`: A matrix of response.
+- `X`: A matrix of covariates.
+- `α`: A matrix of logit regression coefficients.
+- `model`: A matrix specifying the expert functions.
+
+# Optional Arguments
+- `expusure`: an array of numerics, indicating the time invertal over which the count data (if applicable) are collected.
+    If `nothing` is provided, it is set to 1.0 for all observations. It is assumed that all continuous expert functions are
+    not affected by `exposure`.
+- `β_init`: a matrix of regression coefficients before the random effects.
+- `map_matrix`: a matrix that maps each observation to their corresponding factor(s) in the random effect(s).
+- `re_μ_list`: a list of arrays of the variational means of random effects.
+- `re_Σ_list`: a list of arrays of the (diagonal) variational covariance matrices of random effects.
+- `n_sims`: number of simulations used to approximate the expectation of the loglikelihood/Evidence Lower Bound (ELBO).
+- `penalty`: `true` (default) or `false`, indicating whether penalty is imposed on the magnitude of parameters.
+- `pen_α`: a numeric penalty on the magnitude of logit regression coefficients. Default is 1.0.
+- `pen_params`: an array of penalty term on the magnitude of parameters of component distributions/expert functions.
+- `ϵ`: Stopping criterion on loglikelihood (stop when the increment is less than `ϵ`). Default is 0.001.
+- `α_iter_max`: Maximum number of iterations when updating `α`. Default is 5.
+- `ecm_iter_max`: Maximum number of iterations of the ECM algorithm. Default is 200.
+- `print_steps`: `true` (default) or `false`, indicating whether intermediate updates of parameters should be logged.
+
+# Return Values
+- `α_fit`: Fitted values of logit regression coefficients `α`.
+- `β_fit`: Fitted values of regression coefficients `β`.
+- `comp_dist`: Fitted parameters of expert functions.
+- `re_μ_list`: a list of arrays of the variational means of random effects.
+- `re_Σ_list`: a list of arrays of the (diagonal) variational covariance matrices of random effects.
+- `ll_history`: a vector of the history of ELBO of the fitted model at each iteration.
+- `converge`: `true` or `false`, indicating whether the fitting procedure has converged.
+- `iter`: Number of iterations passed in the fitting function.
+- `ll`: Loglikelihood of the fitted model (with penalty on the magnitude of parameters).
+- `ll_np`: Loglikelihood of the fitted model (without penalty on the magnitude of parameters).
+- `AIC`: Akaike Information Criterion (AIC) of the fitted model.
+- `BIC`: Bayesian Information Criterion (BIC) of the fitted model.
+"""
 function fit_exact_VI(Y, X, α_init, model;
     exposure=nothing,
     β_init=nothing, map_matrix=nothing, re_μ_list=nothing, re_Σ_list=nothing, n_sims=10,
