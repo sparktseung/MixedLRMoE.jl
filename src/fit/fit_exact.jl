@@ -19,11 +19,50 @@ function _get_z_e_obs_threaded(
     return z_e_obs
 end
 
-function fit_exact_VI(Y, X, α_init, model;
-    exposure=nothing,
-    β_init=nothing, map_matrix=nothing, re_μ_list=nothing, re_Σ_list=nothing, n_sims=10,
+"""
+    fit_exact_VI(Y, X, α_init, model, β_init, map_matrix, re_μ_list, re_Σ_list; ...)
+
+Fit a Mixed LRMoE model with exact observations of Y using a variational algorithm.
+
+# Arguments
+- `Y`: A matrix of response.
+- `X`: A matrix of covariates.
+- `α`: A matrix of logit regression coefficients.
+- `model`: A matrix specifying the expert functions.
+- `β_init`: a matrix of regression coefficients before the random effects.
+- `map_matrix`: a matrix that maps each observation to their corresponding factor(s) in the random effect(s).
+- `re_μ_list`: a list of arrays of the variational means of random effects.
+- `re_Σ_list`: a list of arrays of the (diagonal) variational covariance matrices of random effects.
+
+# Optional Arguments
+- `expusure`: an array of numerics, indicating the time invertal over which the count data (if applicable) are collected.
+    If `nothing` is provided, it is set to 1.0 for all observations. It is assumed that all continuous expert functions are
+    not affected by `exposure`.
+- `n_sims`: number of simulations used to approximate the expectation of the loglikelihood/Evidence Lower Bound (ELBO).
+- `penalty`: `true` (default) or `false`, indicating whether penalty is imposed on the magnitude of parameters.
+- `pen_α`: a numeric penalty on the magnitude of logit regression coefficients. Default is 1.0.
+- `pen_params`: an array of penalty term on the magnitude of parameters of component distributions/expert functions.
+- `α_iter_max`: Maximum number of iterations when updating `α`. Default is 5.
+- `ecm_iter_max`: Maximum number of iterations of the ECM algorithm. Default is 200.
+- `print_steps`: `true` (default) or `false`, indicating whether intermediate updates of parameters should be logged.
+
+# Return Values
+- `α_fit`: Fitted values of logit regression coefficients `α`.
+- `β_fit`: Fitted values of regression coefficients `β`.
+- `comp_dist`: Fitted parameters of expert functions.
+- `re_μ_list`: a list of arrays of the variational means of random effects.
+- `re_Σ_list`: a list of arrays of the (diagonal) variational covariance matrices of random effects.
+- `ll_history`: a vector of the history of ELBO of the fitted model at each iteration.
+- `iter`: Number of iterations passed in the fitting function.
+- `ll`: Loglikelihood of the fitted model (with penalty on the magnitude of parameters).
+- `ll_np`: Loglikelihood of the fitted model (without penalty on the magnitude of parameters).
+"""
+function fit_exact_VI(Y, X, α_init, model,
+    β_init, map_matrix,
+    re_μ_list, re_Σ_list;
+    exposure=nothing, n_sims=10,
     penalty=true, pen_α=5.0, pen_params=nothing,
-    ϵ=1e-03, α_iter_max=5.0, ecm_iter_max=200,
+    α_iter_max=5, ecm_iter_max=200,
     print_steps=1)
     # Make variables accessible within the scope of `let`
     let α_em, β_em, gate_em, model_em, model_em_expo, ll_em_list, ll_em, ll_em_np,
@@ -180,20 +219,21 @@ function fit_exact_VI(Y, X, α_init, model;
             push!(ll_em_return, ll_em)
         end
 
-        converge = (ll_em - ll_em_old > ϵ) ? false : true
-        AIC =
-            -2.0 * ll_em_np +
-            2 * (_count_α(gate_em.α) + _count_β(gate_em.β) + _count_params(model_em))
-        BIC =
-            -2.0 * ll_em_np +
-            log(size(Y)[1]) *
-            (_count_α(gate_em.α) + _count_β(gate_em.β)_count_params(model_em))
+        # converge = (ll_em - ll_em_old > ϵ) ? false : true
+        # AIC =
+        #     -2.0 * ll_em_np +
+        #     2 * (_count_α(gate_em.α) + _count_β(gate_em.β) + _count_params(model_em))
+        # BIC =
+        #     -2.0 * ll_em_np +
+        #     log(size(Y)[1]) *
+        #     (_count_α(gate_em.α) + _count_β(gate_em.β)_count_params(model_em))
 
         return (α_fit=gate_em.α, β_fit=gate_em.β, model_fit=model_em,
             re_μ_fit=re_μ_em, re_Σ_fit=re_Σ_em,
             ll_history=ll_em_return,
-            converge=converge, iter=iter,
-            ll_np=ll_em_np, ll=ll_em,
-            AIC=AIC, BIC=BIC)
+            # converge=converge,
+            iter=iter,
+            ll_np=ll_em_np, ll=ll_em) # ,
+        # AIC=AIC, BIC=BIC)
     end
 end

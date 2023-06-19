@@ -22,7 +22,12 @@ import LRMoE:
     _count_α,
     _count_params
 
-# export
+export
+    LogitGating,
+    LogitGatingSim,
+    LogitGatingEval,
+    DiagMvNormal_KL,
+    fit_exact_VI
 
 ### source files
 include("gating/logit.jl")
