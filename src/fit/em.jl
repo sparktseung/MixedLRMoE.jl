@@ -92,7 +92,7 @@ function _dQdβ_threaded(
 
     dβj = (
         _EM_M_dQdβj(w, comp_zkz[:, j], comp_zkz_marg, pp[:, j]) .-
-        (penalty ? vec(β[j, :] ./ pen_α^2) : 0.0)
+        (penalty ? vec(β[j, :] ./ pen_α^2) : fill(1e-07, length(β[j, :])))
     )
     dβjdβj = (
         _EM_M_dQ2dβj2(w, comp_zkz_marg, pp[:, j], qqj) -
