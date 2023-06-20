@@ -81,21 +81,29 @@ function _dQdα_all_samples(
     return dαj, dαjdαj
 end
 
-function _dQdβ_threaded(re_list_sample, map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg)
+function _dQdβ_threaded(
+    re_list_sample, map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg, penalty, pen_α
+)
     w = mapRE(re_list_sample, map_matrix)
 
     gate_body = X * α' + w * β'
     pp = exp.(gate_body .- rowlogsumexp(gate_body))
     qqj = exp.(rowlogsumexp(gate_body[:, Not(j)]) - rowlogsumexp(gate_body))
 
-    dβj = _EM_M_dQdβj(w, comp_zkz[:, j], comp_zkz_marg, pp[:, j])
-    dβjdβj = _EM_M_dQ2dβj2(w, comp_zkz_marg, pp[:, j], qqj)
+    dβj = (
+        _EM_M_dQdβj(w, comp_zkz[:, j], comp_zkz_marg, pp[:, j]) .-
+        (penalty ? vec(β[j, :] ./ pen_α^2) : 0.0)
+    )
+    dβjdβj = (
+        _EM_M_dQ2dβj2(w, comp_zkz_marg, pp[:, j], qqj) -
+        (penalty ? (1.0 ./ pen_α^2) * I(size(β)[2]) : (1e-07) * I(size(β)[2]))
+    )
 
     return dβj, dβjdβj
 end
 
 function _dQdβ_all_samples(
-    re_list_sample_list, map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg
+    re_list_sample_list, map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg, penalty, pen_α
 )
     n_sims = length(re_list_sample_list)
     βj_len = length(β[j, :])
@@ -105,8 +113,8 @@ function _dQdβ_all_samples(
 
     @threads for sample_no in 1:n_sims
         dβj_mat[:, sample_no], dβjdβj_mat[:, :, sample_no] = _dQdβ_threaded(
-            re_list_sample_list[sample_no], map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg
-        )
+            re_list_sample_list[sample_no], map_matrix, X, α, β, comp_zkz, j, comp_zkz_marg,
+            penalty, pen_α)
     end
 
     dβj = sum(dβj_mat; dims=2)[:, 1] ./ n_sims
@@ -272,6 +280,8 @@ function EM_M_αβw_VI(X, α, β, z_e_obs, z_e_lat, k_e;
                         comp_zkz,
                         j,
                         comp_zkz_marg,
+                        penalty,
+                        pen_α,
                     )
 
                     β_new[j, :] = β_new[j, :] .- inv(dβjdβj) * dβj
